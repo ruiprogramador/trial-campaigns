@@ -19,7 +19,7 @@ php artisan migrate --seed
 php artisan queue:work
 ```
 
-## What exists
+## What exists (if not, create to work)
 
 - Models: `Contact`, `ContactList`, `Campaign`, `CampaignSend`
 - A `CampaignService` for dispatching campaigns
