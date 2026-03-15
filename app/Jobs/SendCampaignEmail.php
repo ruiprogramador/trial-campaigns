@@ -14,6 +14,8 @@ class SendCampaignEmail implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
+    public int $tries = 3;
+    public int $backoff = 60;
 
     public function __construct(
         private readonly int $campaignSendId
@@ -39,7 +41,26 @@ class SendCampaignEmail implements ShouldQueue
             ]);
 
             Log::error('Campaign send failed', ['send_id' => $send->id, 'error' => $e->getMessage()]);
+
+            throw $e; // reset for retry
         }
+    }
+
+    public function failed(\Throwable $exception): void
+    {
+        $send = CampaignSend::find($this->campaignSendId);
+
+        if ($send) {
+            $send->update([
+                'status'        => 'failed',
+                'error_message' => $exception->getMessage(),
+            ]);
+        }
+
+        Log::error('Campaign send permanently failed after all retries', [
+            'send_id' => $this->campaignSendId,
+            'error'   => $exception->getMessage(),
+        ]);
     }
 
     private function sendEmail(string $to, string $subject, string $body): void

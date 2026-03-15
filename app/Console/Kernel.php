@@ -12,7 +12,9 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule): void
     {
         $schedule->call(function () {
-            $campaigns = Campaign::where('scheduled_at', '<=', now())->get();
+            $campaigns = Campaign::where('scheduled_at', '<=', now())
+                                    ->where('status', 'draft')
+                                    ->get();
 
             foreach ($campaigns as $campaign) {
                 app(CampaignService::class)->dispatch($campaign);
