@@ -13,6 +13,12 @@ class CampaignService
      */
     public function dispatch(Campaign $campaign): void
     {
+        if ($campaign->status !== 'draft') {
+            throw new \LogicException("Campaign [{$campaign->id}] is not in draft status.");
+        }
+
+        $campaign->update(['status' => 'sending']);
+
         $contacts = $campaign->contactList->contacts()
             ->where('status', 'active')
             ->get();
@@ -26,8 +32,6 @@ class CampaignService
 
             SendCampaignEmail::dispatch($send->id);
         }
-
-        $campaign->update(['status' => 'sending']);
     }
 
     public function buildPayload(Campaign $campaign, array $extra = []): array
